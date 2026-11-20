@@ -220,5 +220,31 @@ mod.addEventListener('click',function(e){if(e.target===mod||e.target.classList.c
 document.addEventListener('keydown',function(e){if(e.key==='Escape')mod.classList.remove('open')});
 })();
 </script>
+<canvas id="rain" aria-hidden="true" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30"></canvas>
+<script>
+(function(){
+if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+var cv=document.getElementById('rain'),cx=cv.getContext('2d'),W=0,H=0,dpr=Math.min(window.devicePixelRatio||1,2);
+function size(){W=window.innerWidth;H=window.innerHeight;cv.width=W*dpr;cv.height=H*dpr;cx.setTransform(dpr,0,0,dpr,0,0)}
+size();window.addEventListener('resize',size);
+function rose(a,b,c,d){return 'data:image/svg+xml;utf8,'+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='29' fill='"+a+"' stroke='"+d+"' stroke-width='2'/><g fill='"+b+"' stroke='"+d+"' stroke-width='1.6'><circle cx='32' cy='15' r='13'/><circle cx='49' cy='28' r='13'/><circle cx='43' cy='48' r='13'/><circle cx='21' cy='48' r='13'/><circle cx='15' cy='28' r='13'/></g><circle cx='32' cy='32' r='14' fill='"+c+"' stroke='"+d+"' stroke-width='1.6'/><path d='M32 30a3 3 0 1 1-3 3a7 7 0 1 1 9-3' fill='none' stroke='"+d+"' stroke-width='2' stroke-linecap='round'/></svg>")}
+function petal(a,d){return 'data:image/svg+xml;utf8,'+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 64'><path d='M20 2C36 14 40 40 20 62C0 40 4 14 20 2Z' fill='"+a+"' stroke='"+d+"' stroke-width='1.5'/><path d='M20 10V54' stroke='"+d+"' stroke-opacity='.35' fill='none'/></svg>")}
+var srcs=[rose('#a50f26','#c91e39','#e8475f','#ffd9de'),rose('#c2185b','#e8467c','#f78fb3','#ffe3ec'),rose('#d32f4a','#ee5b72','#ff9aa9','#fff0f2'),petal('#d8344f','#ffd9de'),petal('#f06b8a','#ffe3ec')];
+var imgs=srcs.map(function(u){var i=new Image();i.src=u;return i});
+var N=W<600?11:24,P=[];
+function mk(first){var big=Math.random()<.7,t=Math.floor(Math.random()*imgs.length),sz=(t>2?14:18)+Math.random()*(t>2?12:20);
+return{x:Math.random()*W,y:first?Math.random()*H*-1.2-20:-60-Math.random()*H*.4,s:sz,t:t,vy:.55+Math.random()*1.1,ph:Math.random()*6.28,sw:.4+Math.random()*.9,amp:14+Math.random()*26,r:Math.random()*6.28,vr:(Math.random()-.5)*.03,a:.8+Math.random()*.2}}
+for(var i=0;i<N;i++){var q=mk(true);q.y=Math.random()*H;P.push(q)}
+var last=performance.now();
+function frame(now){var dt=Math.min((now-last)/16.67,3);last=now;cx.clearRect(0,0,W,H);
+for(var i=0;i<P.length;i++){var q=P[i];q.y+=q.vy*dt;q.ph+=.02*q.sw*dt;q.r+=q.vr*dt;var x=q.x+Math.sin(q.ph)*q.amp;
+if(q.y>H+60){P[i]=q=mk(false)}
+var im=imgs[q.t];if(!im.complete||!im.naturalWidth)continue;
+cx.save();cx.globalAlpha=q.a;cx.translate(x,q.y);cx.rotate(q.r);
+var w=q.s,h=q.t>2?q.s*1.6:q.s;cx.drawImage(im,-w/2,-h/2,w,h);cx.restore()}
+requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+})();
+</script>
 </body>
 </html>
